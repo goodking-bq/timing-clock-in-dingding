@@ -1,22 +1,79 @@
-/*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package main
 
-import "github.com/goodking-bq/timing-clock-in-dingding/cmd"
+import (
+	"flag"
+	"fmt"
+	"github.com/goodking-bq/timing-clock-in-dingding/adb"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
+)
+
+var (
+	adbBin      = "/usr/local/bin/adb"
+	appName     = "com.alibaba.android.rimet"
+	appFullName = "com.alibaba.android.rimet/com.alibaba.android.rimet.biz.LaunchHomeActivity"
+
+	running  = false
+	password string
+	start    = "09:00"
+	end      = "18:00"
+)
+
+func isWorkDay() bool {
+	today := time.Now().Format("20060102")
+	apiUrl := fmt.Sprintf("http://tool.bitefu.net/jiari/?d=%s", today)
+	resp, err := http.Get(apiUrl)
+	if err != nil {
+		println(err)
+	}
+	defer resp.Body.Close()
+	s, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		println(err)
+	}
+	if string(s) == "0" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func clockIn() {
+	running = true
+	log.Println("开始打卡 ...")
+	cmd := adb.NewCommand(adbBin, password)
+	_ = cmd.Unlock()
+	_ = cmd.StartApp(appFullName)
+	time.Sleep(time.Minute)
+	_ = cmd.StopApp(appName)
+	_ = cmd.PowerClick()
+	running = false
+	log.Println("打卡完成。")
+}
 
 func main() {
-	cmd.Execute()
+	flag.StringVar(&start, "start", "09:00", "上班时间")
+	flag.StringVar(&end, "end", "18:00", "下班时间")
+	flag.StringVar(&adbBin, "adb", "/usr/local/bin/adb", "adb 可执行文件路径")
+	flag.StringVar(&password, "password", "", "解锁密码")
+	flag.Parse() // 解析参数
+	ticker := time.NewTicker(time.Microsecond * 100)
+	log.Println("启动成功 ...")
+	for {
+		select {
+		case <-ticker.C: // 时间到，发车
+			t := time.Now().Format("15:04")
+			if t == start || t == end {
+				if !running && isWorkDay() {
+					clockIn()
+				}
+			}
+		default:
+
+		}
+
+	}
+
 }
