@@ -1,13 +1,13 @@
 name: Go Release
 
 on:
-  release:
-    types: [ published ]
+  push:
+    tags:
+      - "v*"
 
 jobs:
-
   release:
-    name: Build with go ${{ matrix.go_version }} on ${{ matrix.os }} and upload
+    name: build,upload and release
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -16,7 +16,6 @@ jobs:
         os: [ ubuntu-latest ]
 
     steps:
-
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v1
         with:
@@ -47,23 +46,14 @@ jobs:
           tar -czvf timing-clock-in-dingding-win-amd64.tar.gz timing-clock-in-dingding-win-amd64.exe
           tar -czvf timing-clock-in-dingding-darwin-amd64.tar.gz timing-clock-in-dingding-darwin-amd64
 
-      - name: Upload timing-clock-in-dingding-linux-amd64.tar.gz to release
-        uses: JasonEtco/upload-to-release@master
+      - name: setup release
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          args: timing-clock-in-dingding-linux-amd64.tar.gz application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload timing-clock-in-dingding-win-amd64.tar.gz to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: timing-clock-in-dingding-win-amd64.tar.gz application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload timing-clock-in-dingding-darwin-amd64.tar.gz to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: timing-clock-in-dingding-darwin-amd64.tar.gz application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: false
+          title: Development Build
+          files: |
+            timing-clock-in-dingding-linux-amd64.tar.gz
+            timing-clock-in-dingding-win-amd64.tar.gz
+            timing-clock-in-dingding-darwin-amd64.tar.gz
