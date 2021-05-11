@@ -63,11 +63,13 @@ func main() {
 	log.Println("你的上班时间为: ", start)
 	log.Println("你的下班时间为: ", end)
 	log.Println("你的adb路径为: ", adbBin)
-	_, err := os.Stat(adbBin)
-
+	state, err := os.Stat(adbBin)
 	if err != nil && os.IsNotExist(err) {
 		log.Fatalln("adb 文件： ", adbBin, " 文件不存在！")
-
+	} else {
+		if state.IsDir() {
+			log.Fatalln("adb 文件： ", adbBin, " 文件不存在！")
+		}
 	}
 	ticker := time.NewTicker(time.Microsecond * 100)
 	log.Println("启动成功 ...")

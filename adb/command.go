@@ -1,16 +1,20 @@
 package adb
 
 import (
+	"log"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 )
 
 var (
-	powerOn = []string{"keyevent", "26"}
-	swipeUp = []string{"touchscreen", " swipe", " 930", " 880", " 930", " 380"}
-	cmd     *Command
-	once    sync.Once
+	screenOnShellInputCommand = []string{"keyevent", "26"}
+	unLockShellInputCommand   = []string{"keyevent", "82"}
+	isScreenOnShellCommand    = []string{"shell", "dumpsys", "window", "policy"}
+
+	cmd  *Command
+	once sync.Once
 )
 
 type Command struct {
@@ -27,10 +31,18 @@ func NewCommand(adbBin, pwd string) *Command {
 }
 
 func (cmd *Command) PowerClick() error {
-	if _, err := cmd.ExecShellInput(powerOn...); err != nil {
+	if _, err := cmd.ExecShellInput(screenOnShellInputCommand...); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (cmd *Command) IsScreenOn() bool {
+	res, err := cmd.Exec(isScreenOnShellCommand...)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	return strings.Contains(res, "screenState=SCREEN_STATE_ON")
 }
 
 func (cmd *Command) StartApp(name string) error {
@@ -58,11 +70,13 @@ func (cmd *Command) InputPassword(pwd string) error {
 }
 
 func (cmd *Command) Unlock() error {
-	if err := cmd.PowerClick(); err != nil {
-		return err
+	if !cmd.IsScreenOn() {
+		if err := cmd.PowerClick(); err != nil {
+			return err
+		}
+		time.Sleep(time.Second)
 	}
-	time.Sleep(time.Second)
-	if _, err := cmd.ExecShellInput(swipeUp...); err != nil {
+	if _, err := cmd.ExecShellInput(unLockShellInputCommand...); err != nil {
 		return err
 	}
 	time.Sleep(time.Second)
