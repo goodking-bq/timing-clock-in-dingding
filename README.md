@@ -10,6 +10,20 @@
 
 节假日不打卡
 
+# platform-tools 下载, 里面包含adb
+
+- windows:
+
+  [https://dl.google.com/android/repository/platform-tools-latest-windows.zip](https://dl.google.com/android/repository/platform-tools-latest-windows.zip)
+- linux:
+
+  [https://dl.google.com/android/repository/platform-tools-latest-linux.zip](https://dl.google.com/android/repository/platform-tools-latest-linux.zip)
+- macos:
+
+  [https://dl.google.com/android/repository/platform-tools-latest-darwin.zip](https://dl.google.com/android/repository/platform-tools-latest-darwin.zip)
+
+浏览器需要翻墙，用迅雷可以下
+
 # 使用
 
 ```
