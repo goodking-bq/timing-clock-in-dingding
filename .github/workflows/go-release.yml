@@ -36,17 +36,34 @@ jobs:
 
       - name: Build
         run: |
-          go build -v -o main .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "-s -w" -o timing-clock-in-dingding-linux-amd64 .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags "-s -w" -o timing-clock-in-dingding-win-amd64.exe .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w" -o timing-clock-in-dingding-darwin-amd64 .
+
 
       - name: Gzip
         run: |
-          mkdir hello-word-${{ matrix.os }}
-          cp main hello-word-${{ matrix.os }}
-          tar -czvf hello-word-${{ matrix.os }}.tar.gz hello-word-${{ matrix.os }}
+          tar -czvf timing-clock-in-dingding-linux-amd64.tar.gz timing-clock-in-dingding-linux-amd64
+          tar -czvf timing-clock-in-dingding-win-amd64.tar.gz timing-clock-in-dingding-win-amd64.exe
+          tar -czvf timing-clock-in-dingding-darwin-amd64.tar.gz timing-clock-in-dingding-darwin-amd64
 
-      - name: Upload to release
+      - name: Upload timing-clock-in-dingding-linux-amd64.tar.gz to release
         uses: JasonEtco/upload-to-release@master
         with:
-          args: hello-word-${{ matrix.os }}.tar.gz application/octet-stream
+          args: timing-clock-in-dingding-linux-amd64.tar.gz application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload timing-clock-in-dingding-win-amd64.tar.gz to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: timing-clock-in-dingding-win-amd64.tar.gz application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload timing-clock-in-dingding-darwin-amd64.tar.gz to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: timing-clock-in-dingding-darwin-amd64.tar.gz application/octet-stream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
