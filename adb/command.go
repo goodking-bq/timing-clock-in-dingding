@@ -20,6 +20,7 @@ type Command struct {
 
 func NewCommand(adbBin, pwd string) *Command {
 	once.Do(func() {
+
 		cmd = &Command{AdbBin: adbBin, Password: pwd}
 	})
 	return cmd

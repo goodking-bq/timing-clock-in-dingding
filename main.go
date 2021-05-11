@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -59,6 +60,15 @@ func main() {
 	flag.StringVar(&adbBin, "adb", "/usr/local/bin/adb", "adb 可执行文件路径")
 	flag.StringVar(&password, "password", "", "解锁密码")
 	flag.Parse() // 解析参数
+	log.Println("你的上班时间为: ", start)
+	log.Println("你的下班时间为: ", end)
+	log.Println("你的adb路径为: ", adbBin)
+	_, err := os.Stat(adbBin)
+
+	if err != nil && os.IsNotExist(err) {
+		log.Fatalln("adb 文件： ", adbBin, " 文件不存在！")
+
+	}
 	ticker := time.NewTicker(time.Microsecond * 100)
 	log.Println("启动成功 ...")
 	for {
