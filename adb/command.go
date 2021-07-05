@@ -3,6 +3,7 @@ package adb
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -23,12 +24,19 @@ type Command struct {
 	Password string
 }
 
-func NewCommand(adbBin, pwd string) *Command {
+func NewCommand(adbBin, pwd string) (*Command, error) {
+	state, err := os.Stat(adbBin)
+	if err != nil && os.IsNotExist(err) {
+		return nil, fmt.Errorf("adb 文件： %s 文件不存在！", adbBin)
+	} else {
+		if state.IsDir() {
+			return nil, fmt.Errorf("adb 文件： %s 文件不存在！", adbBin)
+		}
+	}
 	once.Do(func() {
-
 		cmd = &Command{AdbBin: adbBin, Password: pwd}
 	})
-	return cmd
+	return cmd, nil
 }
 
 func (cmd *Command) PowerClick() error {
