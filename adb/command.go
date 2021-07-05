@@ -1,6 +1,7 @@
 package adb
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
 	"strings"
@@ -45,10 +46,24 @@ func (cmd *Command) IsScreenOn() bool {
 	return strings.Contains(res, "screenState=SCREEN_STATE_ON")
 }
 
+func (cmd *Command) IsUnlock() bool {
+	res, err := cmd.Exec(isScreenOnShellCommand...)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	return strings.Contains(res, "isStatusBarKeyguard=false")
+}
+
 func (cmd *Command) StartApp(name string) error {
 	command := []string{"shell", "am", "start", "-W", "-n", name}
 	if _, err := cmd.Exec(command...); err != nil {
 		return err
+	}
+	time.Sleep(time.Second)
+	pkgName := strings.Split(name, "/")[0]
+	ps, _ := cmd.Exec("shell", "ps", "|", "grep", pkgName)
+	if ps == "" {
+		return fmt.Errorf("未检查到程序启动！")
 	}
 	return nil
 }
@@ -69,6 +84,32 @@ func (cmd *Command) InputPassword(pwd string) error {
 	return nil
 }
 
+func (cmd *Command) KeepOn() chan bool {
+	stop := make(chan bool)
+	tick := time.NewTicker(time.Second * 1)
+	go func(ticker *time.Ticker) {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				cmd.Click("0", "0")
+			case s := <-stop:
+				if s {
+					return
+				}
+			}
+		}
+	}(tick)
+	return stop
+}
+
+func (cmd *Command) Click(x, y string) {
+	_, err := cmd.ExecShellInput("tap", x, y)
+	if err != nil {
+		return
+	}
+}
+
 func (cmd *Command) Unlock() error {
 	if !cmd.IsScreenOn() {
 		if err := cmd.PowerClick(); err != nil {
@@ -84,6 +125,10 @@ func (cmd *Command) Unlock() error {
 		if err := cmd.InputPassword(cmd.Password); err != nil {
 			return err
 		}
+	}
+	time.Sleep(time.Second / 2)
+	if !cmd.IsUnlock() {
+		return fmt.Errorf("请检查密码是否正确！")
 	}
 	return nil
 }

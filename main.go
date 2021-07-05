@@ -45,13 +45,19 @@ func clockIn() {
 	running = true
 	log.Println("开始打卡 ...")
 	cmd := adb.NewCommand(adbBin, password)
-	_ = cmd.Unlock()
-	_ = cmd.StartApp(appFullName)
+	if err := cmd.Unlock(); err != nil {
+		log.Fatalf("解锁失败: %s", err.Error())
+	}
+	stop := cmd.KeepOn()
+	if err := cmd.StartApp(appFullName); err != nil {
+		log.Fatalf("启动钉钉失败: %s", err.Error())
+	}
 	time.Sleep(time.Minute)
 	_ = cmd.StopApp(appName)
 	_ = cmd.PowerClick()
 	running = false
 	log.Println("打卡完成。")
+	stop <- true
 }
 
 func main() {
@@ -75,17 +81,13 @@ func main() {
 	log.Println("启动成功 ...")
 	for {
 		select {
-		case <-ticker.C: // 时间到，发车
+		case <-ticker.C: // 时间到
 			t := time.Now().Format("15:04")
 			if t == start || t == end {
 				if !running && isWorkDay() {
 					clockIn()
 				}
 			}
-		default:
-
 		}
-
 	}
-
 }
