@@ -11,10 +11,12 @@ import (
 )
 
 type Timing struct {
-	opt       Options
-	Cmd       *adb.Command
-	isRunning bool
-	nextRunAt string
+	start       string
+	end         string
+	Cmd         *adb.Command
+	isRunning   bool
+	nextRunAt   string
+	nextRunType string
 }
 
 type Options struct {
@@ -38,23 +40,43 @@ func NewTiming(opt Options) (*Timing, error) {
 	if err != nil {
 		return nil, err
 	}
-	next, err := nextRun(opt.Start, opt.End, 0)
+	next, runType, err := nextRun(opt.Start, opt.End, 0)
 	if err != nil {
 		return nil, err
 	}
 	return &Timing{
-		opt:       opt,
-		nextRunAt: next,
-		Cmd:       cmd,
-		isRunning: false,
+		start:       opt.Start,
+		end:         opt.End,
+		nextRunAt:   next,
+		nextRunType: runType,
+		Cmd:         cmd,
+		isRunning:   false,
 	}, nil
 }
 
-func (t *Timing) nextRun() {
+func (t *Timing) NextRun() {
 	rand.Seed(time.Now().UnixNano())
 	randMinute := rand.Intn(10)
-	next, _ := nextRun(t.opt.Start, t.opt.End, randMinute)
-	t.nextRunAt = next
+	if t.nextRunType == "" {
+		next, runType, _ := nextRun(t.start, t.end, randMinute)
+		t.nextRunAt = next
+		t.nextRunType = runType
+	} else {
+		switch t.nextRunType {
+		case "end":
+			d, _ := time.ParseDuration(fmt.Sprintf("-%dm", randMinute))
+			startT, _ := time.Parse("15:04", t.start)
+			r := startT.Add(d)
+			t.nextRunAt = r.Format("15:04")
+			t.nextRunType = "start"
+		case "start":
+			d, _ := time.ParseDuration(fmt.Sprintf("+%dm", randMinute))
+			endT, _ := time.Parse("15:04", t.end)
+			r := endT.Add(d)
+			t.nextRunAt = r.Format("15:04")
+			t.nextRunType = "end"
+		}
+	}
 	log.Printf("下次打卡时间为: %s", t.nextRunAt)
 }
 
@@ -107,32 +129,32 @@ func (t *Timing) Run() {
 			now := time.Now().Format("15:04")
 			if now == t.nextRunAt {
 				t.clockIn()
-				t.nextRun()
+				t.NextRun()
 			}
 		}
 	}
 }
 
-func nextRun(start, end string, randMinute int) (string, error) {
+func nextRun(start, end string, randMinute int) (string, string, error) {
 	now, _ := time.Parse("15:04", time.Now().Format("15:04"))
 	startT, err := time.Parse("15:04", start)
 	if err != nil {
-		return "", fmt.Errorf("上班时间格式错误。")
+		return "", "", fmt.Errorf("上班时间格式错误。")
 	}
 	endT, err := time.Parse("15:04", end)
 	if err != nil {
-		return "", fmt.Errorf("下班时间格式错误。")
+		return "", "", fmt.Errorf("下班时间格式错误。")
 	}
 	if !startT.Before(endT) {
-		return "", fmt.Errorf("上班时间早于下班时间。")
+		return "", "", fmt.Errorf("上班时间早于下班时间。")
 	}
 	if now.Before(startT) || now.After(endT) || now.Equal(startT) {
 		d, _ := time.ParseDuration(fmt.Sprintf("-%dm", randMinute))
 		r := startT.Add(d)
-		return r.Format("15:04"), nil
+		return r.Format("15:04"), "start", nil
 	} else {
 		d, _ := time.ParseDuration(fmt.Sprintf("+%dm", randMinute))
 		r := endT.Add(d)
-		return r.Format("15:04"), nil
+		return r.Format("15:04"), "end", nil
 	}
 }
