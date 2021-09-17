@@ -120,19 +120,17 @@ func (t *Timing) Run() {
 	ticker := time.NewTicker(time.Second)
 	log.Println("启动成功")
 	log.Printf("下次打卡时间为: %s", t.nextRunAt)
-	for {
-		select {
-		case <-ticker.C:
-			if t.isRunning && !t.isWorkDay() {
-				break
-			}
-			now := time.Now().Format("15:04")
-			if now == t.nextRunAt {
-				t.clockIn()
-				t.NextRun()
-			}
+	for range ticker.C {
+		if t.isRunning && !t.isWorkDay() {
+			break
+		}
+		now := time.Now().Format("15:04")
+		if now == t.nextRunAt {
+			t.clockIn()
+			t.NextRun()
 		}
 	}
+	ticker.Stop()
 }
 
 func nextRun(start, end string, randMinute int) (string, string, error) {
