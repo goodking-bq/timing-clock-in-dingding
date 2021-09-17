@@ -117,7 +117,7 @@ func (t *Timing) clockIn() {
 }
 
 func (t *Timing) Run() {
-	ticker := time.NewTicker(time.Microsecond * 100)
+	ticker := time.NewTicker(time.Second)
 	log.Println("启动成功")
 	log.Printf("下次打卡时间为: %s", t.nextRunAt)
 	for {
