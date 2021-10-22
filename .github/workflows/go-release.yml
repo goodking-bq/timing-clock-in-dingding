@@ -24,7 +24,9 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
-
+      - name: Set output
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
@@ -34,10 +36,12 @@ jobs:
           fi
 
       - name: Build
+        env:
+          TAG: ${{ steps.vars.outputs.tag }}
         run: |
-          CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.Version=$GITHUB_REF -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-linux-amd64 .
-          CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.Version=$GITHUB_REF -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-win-amd64.exe .
-          CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.Version=$GITHUB_REF -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-darwin-amd64 .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.Version=$TAG -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-linux-amd64 .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.Version=$TAG -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-win-amd64.exe .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.Version=$TAG -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-darwin-amd64 .
           ./timing-clock-in-dingding-linux-amd64 -v
           echo $GITHUB_REF $GITHUB_SHA
 
