@@ -59,7 +59,7 @@ func (cmd *Command) IsUnlock() bool {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	return strings.Contains(res, "isStatusBarKeyguard=false")
+	return strings.Contains(res, "mInputRestricted=false")
 }
 
 func (cmd *Command) StartApp(name string) error {
