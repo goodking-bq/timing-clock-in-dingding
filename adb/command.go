@@ -12,7 +12,7 @@ import (
 
 var (
 	screenOnShellInputCommand = []string{"keyevent", "26"}
-	unLockShellInputCommand   = []string{"keyevent", "82"}
+	unLockShellInputCommand   = []string{"swipe", "200", "500", "200", "0"}
 	isScreenOnShellCommand    = []string{"shell", "dumpsys", "window", "policy"}
 
 	cmd  *Command
