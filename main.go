@@ -10,7 +10,7 @@ var (
 	v bool
 )
 
-const (
+var (
 	Version = "2.0"
 	Sha     = ""
 )
