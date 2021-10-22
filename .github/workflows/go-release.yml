@@ -35,9 +35,9 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.Verson=${{GITHUB_REF}} -X main.Sha=${{GITHUB_SHA}}" -o timing-clock-in-dingding-linux-amd64 .
-          CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.Verson=${{GITHUB_REF}} -X main.Sha=${{GITHUB_SHA}}" -o timing-clock-in-dingding-win-amd64.exe .
-          CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.Verson=${{GITHUB_REF}} -X main.Sha=${{GITHUB_SHA}}" -o timing-clock-in-dingding-darwin-amd64 .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.Verson=$GITHUB_REF -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-linux-amd64 .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.Verson=$GITHUB_REF -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-win-amd64.exe .
+          CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.Verson=$GITHUB_REF -X main.Sha=$GITHUB_SHA" -o timing-clock-in-dingding-darwin-amd64 .
           ./timing-clock-in-dingding-linux-amd64 -v
 
       - name: Gzip
